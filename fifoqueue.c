@@ -41,7 +41,7 @@ char * fifo_q_to_string(FIFO_q_p queue, char * string) {
 		strcat(tempstring, "->");
         tempnode = tempnode->next;
     }
-    strcat(tempstring, "*");
+   strcat(tempstring, "*");
    strcpy(string, tempstring);
    return string;
 }

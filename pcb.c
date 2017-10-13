@@ -6,7 +6,7 @@ Joshua Meigs
 Yaroslav Salo
 */
 #include "pcb.h"
-#include <time.h>
+
 unsigned int GLOBAL_PID = 1;
 
 /************************************************************
@@ -81,8 +81,7 @@ char * cpu_context_to_string(CPU_context_p context_ptr) {
 
 PCB_p pcb_constructor(void) {
     PCB_p pcb_ptr = (PCB_p) malloc(sizeof(PCB_s));
-    CPU_context_p context_ptr = cpu_context_constructor();      // allocate memory for the context.
-    pcb_ptr->context = context_ptr;                             // assign the pcb_context pointer.
+    pcb_init(pcb_ptr);
     return pcb_ptr;
 }
  
@@ -111,6 +110,8 @@ int pcb_init(PCB_p pcb_ptr) {
     pcb_ptr->mem = (unsigned char *) pcb_ptr;   // ?????????
     pcb_ptr->size = 0;                          // ????????? 
     pcb_ptr->channel_no = 0;                    // ?????????
+    CPU_context_p context_ptr = cpu_context_constructor();      // allocate memory for the context.
+    pcb_ptr->context = context_ptr;                             // assign the pcb_context pointer.
     cpu_context_init(pcb_ptr->context);
     return NO_ERR;
 }

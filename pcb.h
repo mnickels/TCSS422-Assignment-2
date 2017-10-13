@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <time.h>
 
 /* 
 * The process identification number.
