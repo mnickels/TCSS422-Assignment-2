@@ -1,14 +1,23 @@
-CC = gcc 
-CFLAGS = -c -Wall 
-C99FLAG = -std=c99
-output: pcb.o test.o 
-	$(CC) $(C99FLAG) pcb.c test.c -o output
 
-pcb.o: pcb.c 
-	$(CC) $(CFLAGS) $(C99FLAG) pcb.c 
+#This make file doesn't recompile the header files if that is the only thing that changed.
+CC := gcc
 
-test.o: test.c 
-	$(CC) $(CFLAGS) $(C99FLAG) test.c
+CFLAGS := -c -std=c99 -Wall
 
-clean: 
-	rm *.o output
+SRCS := $(wildcard *.c)
+OBJS := $(SRCS:.c=.o)
+
+
+
+.PHONY: default clean
+
+default: output
+
+output: $(OBJS)
+	$(CC) $(LFLAGS)  $(OBJS) -o $@ 
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@ -I.
+
+clean:
+	rm -f *.o output
