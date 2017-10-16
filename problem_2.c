@@ -23,12 +23,57 @@ void create_processes(FIFO_q_p process_q, unsigned char num_processes) {
 void isr(PCB_p running_process, FIFO_q_p ready_list) {
     if (running_process) {
         pcb_set_state(running_process, interrupted);
-        pcb_set_pc(running_process, SYS_STACK);
+        //pcb_set_pc(running_process, SYS_STACK);
         // up-call to scheduler
     } // else - CPU is in idle state
     scheduler(running_process, ready_list, timer);
 }
 
+void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
+	PRINT_FLAG++;
+	PCB_p temp = running_process;
+	running_process = fifo_q_dequeue(ready_list);// mutates this pointer
+	   
+    char * run_str;
+    char * switch_str;
+    char s[50000];
+	if(PRINT_FLAG == 4) {
+    	printf("FOURTH CALL\n------------------------------------------------\n");
+    	
+    	run_str = pcb_to_string(temp);
+    	switch_str = pcb_to_string(running_process);
+    	printf("%s\nSwitching to:\n%s\n", run_str, switch_str);
+    }
+	
+	pcb_set_state(temp, ready);
+
+	/**
+	* SHOULD WE DO THIS. 
+	*/
+	//pcb_set_pc(temp, SYS_STACK);
+
+	// switch to next process
+    if (running_process) {
+        pcb_set_state(running_process, running);
+        SYS_STACK = pcb_get_pc(running_process);
+        fifo_q_enqueue(ready_list, temp);
+    } // else - nothing to run, ready queue is empty
+
+
+
+    if (PRINT_FLAG == 4) {
+    	PRINT_FLAG = 0;
+    	run_str = pcb_to_string(temp);
+    	switch_str = pcb_to_string(running_process);
+    	printf("After Switch:\n%s\n%s\n", run_str, switch_str);
+    	printf("------------------------------------------------\n");	
+    	free(run_str);
+    	free(switch_str);
+    	printf("%s\n", fifo_q_to_string(ready_list, s));
+    }
+    
+
+}
 
 void scheduler(PCB_p running_process, FIFO_q_p ready_list, enum interrupt_type type) {
     
@@ -36,16 +81,14 @@ void scheduler(PCB_p running_process, FIFO_q_p ready_list, enum interrupt_type t
 
     	case timer: //timer interrupt
     		if (running_process) {
-            	// put running process back in ready queue
-            	pcb_set_state(running_process, ready);
-            	fifo_q_enqueue(ready_list, running_process);
+				dispatcher(running_process ,ready_list);
        		} // else - CPU is in idle state
 
-        	dispatcher(running_process ,ready_list);
         	break;
         
         case none: //schedule a process 
         	fifo_q_enqueue(ready_list, running_process);
+        	pcb_set_state(running_process, ready);
         	char * run_str = pcb_to_string(running_process);
         	printf("PROCESS SCHEDULED\n%s\n",run_str);
         	free(run_str);
@@ -53,38 +96,7 @@ void scheduler(PCB_p running_process, FIFO_q_p ready_list, enum interrupt_type t
     }
 }
 
-void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
-	PCB_p temp = running_process;
-	PRINT_FLAG++;    
-    running_process = fifo_q_dequeue(ready_list);   // mutates this pointer
-    char s[5000];
-    char * run_str;
-    char * switch_str;
 
-    if(PRINT_FLAG == 4) {
-    	printf("FOURTH CALL\n------------------------------------------------\n");
-    	
-    	run_str = pcb_to_string(temp);
-    	switch_str = pcb_to_string(running_process);
-    	printf("%s\nSwitching to:\n%s\n", run_str, switch_str);
-
-    	//printf("%s\n", fifo_q_to_string(ready_list, s));
-    	
-    }
-    // switch to next process
-    if (running_process) {
-        SYS_STACK = pcb_get_pc(running_process);
-    } // else - nothing to run, ready queue is empty
-
-    if (PRINT_FLAG == 4) {
-    	PRINT_FLAG = 0;
-    	printf("%s\nAfter Switch to:\n%s\n", run_str, switch_str);
-    	printf("------------------------------------------------\n");	
-    	free(run_str);
-    	free(switch_str);
-    }
-
-}
 
 int main(int argc, char const *argv[]) {
     FIFO_q_p created_list = fifo_q_new();
@@ -101,16 +113,22 @@ int main(int argc, char const *argv[]) {
     	if(max_num_process > 30) break;	
         // create some new processes and add them to the created queue
         create_processes(created_list, num_to_create);
+        
         // add any new processes to the ready queue
         while(!fifo_q_is_empty(created_list)) {
-            scheduler(fifo_q_dequeue(created_list), ready_list, none);
+        	unsigned int cycles_executed = rand() % 1001 + 3000;
+            cpu_pc += cycles_executed;
+            PCB_p process = fifo_q_dequeue(created_list);
+            pcb_set_pc(process, cycles_executed);
+            scheduler(process, ready_list, none);
         }
 
+        //deque the process and put it into the runnig state
         running_process = fifo_q_dequeue(ready_list);
+
         //simulate timer quantum for currently running process
         if (running_process) {
-            unsigned int cycles_executed = rand() % 1001 + 3000;
-            cpu_pc += cycles_executed;
+        	pcb_set_state(running_process, running);
         }
        
         // simulate timer interrupt
