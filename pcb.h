@@ -146,7 +146,7 @@ int pcb_set_state(PCB_p pcb_ptr, enum state_type state);
 /**
 * Sets the pc of the pcb's context. 
 */
-int pcb_set_pc(PCB_p pcb_ptr, unsigned int pc);
+void pcb_set_pc(PCB_p pcb_ptr, unsigned int pc);
 
 /**
 * Returns the pc of this pcb's context. 

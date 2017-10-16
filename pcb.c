@@ -100,10 +100,11 @@ int pcb_set_pid(PCB_p pcb_ptr){
 
 int pcb_set_state(PCB_p pcb_ptr, enum state_type state) {
     if (check_pointer(pcb_ptr) == NO_OBJ_ERR) return NO_OBJ_ERR;
-    pcb_ptr->state = state;    
+    pcb_ptr->state = state;   
+    return NO_ERR; 
 }
 
-int pcb_set_pc(PCB_p pcb_ptr, unsigned int pc) {
+void pcb_set_pc(PCB_p pcb_ptr, unsigned int pc) {
     pcb_ptr->context->pc = pc;      
 }
 

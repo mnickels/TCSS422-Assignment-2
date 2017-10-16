@@ -34,11 +34,11 @@ char * fifo_q_to_string(FIFO_q_p queue, char * string) {
 	strcat(tempstring, buffer);
 	strcat(tempstring, ": ");
 	Node_p tempnode = queue->front;
-	for (int i = 0; i < queue->length; i++) {
-		sprintf(buffer, "%d", tempnode->process->pid);
-		strcat(tempstring, "P");
-		strcat(tempstring, buffer);
-		strcat(tempstring, "->");
+    while (tempnode) {
+        sprintf(buffer, "%d", tempnode->process->pid);
+        strcat(tempstring, "P");
+        strcat(tempstring, buffer);
+        strcat(tempstring, "->");
         tempnode = tempnode->next;
     }
    strcat(tempstring, "*");
@@ -83,4 +83,10 @@ PCB_p fifo_q_dequeue(FIFO_q_p queue) {
     queue->front = next;
     queue->length--;
     return dequeued_process;
+}
+
+PCB_p fifo_q_peek(FIFO_q_p queue) {
+    if (fifo_q_is_empty(queue))
+        return NULL;
+    return queue->front->process;
 }
