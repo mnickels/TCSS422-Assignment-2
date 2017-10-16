@@ -57,23 +57,32 @@ void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
 	PCB_p temp = running_process;
 	PRINT_FLAG++;    
     running_process = fifo_q_dequeue(ready_list);   // mutates this pointer
-    
+    char s[5000];
+    char * run_str;
+    char * switch_str;
+
     if(PRINT_FLAG == 4) {
-    	printf("FOURTH CALL\n");
-    	char ready_str[5000000];
-    	char * run_str = pcb_to_string(temp);
-    	char * switch_str = pcb_to_string(running_process);
+    	printf("FOURTH CALL\n------------------------------------------------\n");
+    	
+    	run_str = pcb_to_string(temp);
+    	switch_str = pcb_to_string(running_process);
     	printf("%s\nSwitching to:\n%s\n", run_str, switch_str);
-    	free(run_str);
-    	free(switch_str);
-    	//printf("%s\n", fifo_q_to_string(ready_list, ready_str));
-    	PRINT_FLAG = 0;	
+
+    	//printf("%s\n", fifo_q_to_string(ready_list, s));
+    	
     }
     // switch to next process
     if (running_process) {
         SYS_STACK = pcb_get_pc(running_process);
     } // else - nothing to run, ready queue is empty
 
+    if (PRINT_FLAG == 4) {
+    	PRINT_FLAG = 0;
+    	printf("%s\nAfter Switch to:\n%s\n", run_str, switch_str);
+    	printf("------------------------------------------------\n");	
+    	free(run_str);
+    	free(switch_str);
+    }
 
 }
 
@@ -92,7 +101,6 @@ int main(int argc, char const *argv[]) {
     	if(max_num_process > 30) break;	
         // create some new processes and add them to the created queue
         create_processes(created_list, num_to_create);
-
         // add any new processes to the ready queue
         while(!fifo_q_is_empty(created_list)) {
             scheduler(fifo_q_dequeue(created_list), ready_list, none);
