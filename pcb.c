@@ -98,6 +98,18 @@ int pcb_set_pid(PCB_p pcb_ptr){
     return NO_ERR;
 }
 
+int pcb_set_state(PCB_p pcb_ptr, enum state_type state) {
+    if (check_pointer(pcb_ptr) == NO_OBJ_ERR) return NO_OBJ_ERR;
+    pcb_ptr->state = state;    
+}
+
+int pcb_set_pc(PCB_p pcb_ptr, unsigned int pc) {
+    pcb_ptr->context->pc = pc;      
+}
+
+unsigned int pcb_get_pc(PCB_p pcb_ptr) {
+    return pcb_ptr->context->pc;
+}
 int pcb_init(PCB_p pcb_ptr) {
     if (check_pointer(pcb_ptr) == NO_OBJ_ERR) return NO_OBJ_ERR; 
     int r = rand() % 16;                        // generate a random number 0-15

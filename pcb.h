@@ -138,6 +138,21 @@ int pcb_deconstructor(PCB_p *pcb_ptr);
 */
 int pcb_set_pid(PCB_p pcb_ptr);
 
+/**
+* Sets the state of the pcb to state.
+*/
+int pcb_set_state(PCB_p pcb_ptr, enum state_type state);
+
+/**
+* Sets the pc of the pcb's context. 
+*/
+int pcb_set_pc(PCB_p pcb_ptr, unsigned int pc);
+
+/**
+* Returns the pc of this pcb's context. 
+*/
+unsigned int pcb_get_pc(PCB_p pcb_ptr);
+
 /*
 * Initializes the pcb members. 
 * If pcb_ptr is invalid returns a -1 otherwise 0.
