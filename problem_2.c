@@ -21,35 +21,35 @@ void create_processes(FIFO_q_p process_q, unsigned char num_processes) {
     }
 }
 
-// void isr(PCB_p running_process) {
-//     if (running_process) {
-//         pcb_set_state(running_process, interrupted);
-//         pcb_set_pc(running_process, SYS_STACK);
-//         // up-call to scheduler
-//     } // else - CPU is in idle state
-//     scheduler(running_process, timer);
-// }
+void isr(PCB_p running_process, FIFO_q_p ready_list) {
+    if (running_process) {
+        pcb_set_state(running_process, interrupted);
+        pcb_set_pc(running_process, SYS_STACK);
+        // up-call to scheduler
+    } // else - CPU is in idle state
+    scheduler(running_process, timer);
+}
 
 
-// void scheduler(PCB_p running_process, enum interrupt_type type) {
-//     if (type == timer) {
-//         if (running_process) {
-//             // put running process back in ready queue
-//             pcb_set_state(running_process, ready);
-//             fifo_q_enqueue(ready_list, running_process);
-//         } // else - CPU is in idle state
+void scheduler(PCB_p running_process, FIFO_q_p ready_list, enum interrupt_type type) {
+    if (type == timer) {
+        if (running_process) {
+            // put running process back in ready queue
+            pcb_set_state(running_process, ready);
+            fifo_q_enqueue(ready_list, running_process);
+        } // else - CPU is in idle state
 
-//         dispatcher(running_process);
-//     }
-// }
+        dispatcher(running_process ,ready_list);
+    }
+}
 
-// void dispatcher(PCB_p running_process) {
-//     // switch to next process
-//     running_process = fifo_q_dequeue(ready_list);   // mutates this pointer
-//     if (running_process) {
-//         SYS_STACK = pcb_get_pc(running_process);
-//     } // else - nothing to run, ready queue is empty
-// }
+void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
+    // switch to next process
+    running_process = fifo_q_dequeue(ready_list);   // mutates this pointer
+    if (running_process) {
+        SYS_STACK = pcb_get_pc(running_process);
+    } // else - nothing to run, ready queue is empty
+}
 
 int main(int argc, char const *argv[]) {
     FIFO_q_p created_list = fifo_q_new();
@@ -71,24 +71,19 @@ int main(int argc, char const *argv[]) {
         // add any new processes to the ready queue
         while(!fifo_q_is_empty(created_list)) {
             fifo_q_enqueue(ready_list, fifo_q_dequeue(created_list));
-            printf("The len: %d\n", ready_list->length);
         }
-        char s[50000]; 
-        printf("%s\n", fifo_q_to_string(ready_list, s));
-        printf("The rand: %d\n", max_num_process);
 
         running_process = fifo_q_dequeue(ready_list);
-        // simulate timer quantum for currently running process
-        // if (running_process) {
-        //     unsigned int cycles_executed = rand() % 1001 + 3000;
-        //     cpu_pc += cycles_executed;
-        // }
-        
-
-
-        // // simulate timer interrupt
-        // SYS_STACK = cpu_pc;
-        // isr(running_process);
+        simulate timer quantum for currently running process
+        if (running_process) {
+            unsigned int cycles_executed = rand() % 1001 + 3000;
+            cpu_pc += cycles_executed;
+        }
+       
+        // simulate timer interrupt
+        SYS_STACK = cpu_pc;
+        isr(running_process);
+        cpu_pc = SYS_STACK;
     }
 
     // cpu_pc += rand_increment;
