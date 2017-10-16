@@ -4,9 +4,9 @@
 // should we move this stuff to a .h file?
 enum interrupt_type {none, timer};
 void create_processes(FIFO_q_p, unsigned char);
-void isr(PCB_p);
-void scheduler(PCB_p, enum interrupt_type);
-void dispatcher(PCB_p);
+void isr(PCB_p, FIFO_q_p);
+void scheduler(PCB_p, FIFO_q_p, enum interrupt_type);
+void dispatcher(PCB_p, FIFO_q_p);
 int main(int, char const **);
 //
 
@@ -27,7 +27,7 @@ void isr(PCB_p running_process, FIFO_q_p ready_list) {
         pcb_set_pc(running_process, SYS_STACK);
         // up-call to scheduler
     } // else - CPU is in idle state
-    scheduler(running_process, timer);
+    scheduler(running_process, ready_list, timer);
 }
 
 
@@ -74,7 +74,7 @@ int main(int argc, char const *argv[]) {
         }
 
         running_process = fifo_q_dequeue(ready_list);
-        simulate timer quantum for currently running process
+        //simulate timer quantum for currently running process
         if (running_process) {
             unsigned int cycles_executed = rand() % 1001 + 3000;
             cpu_pc += cycles_executed;
@@ -82,7 +82,7 @@ int main(int argc, char const *argv[]) {
        
         // simulate timer interrupt
         SYS_STACK = cpu_pc;
-        isr(running_process);
+        isr(running_process, ready_list);
         cpu_pc = SYS_STACK;
     }
 
