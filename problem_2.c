@@ -8,8 +8,7 @@ void isr(PCB_p, FIFO_q_p);
 void scheduler(PCB_p, FIFO_q_p, enum interrupt_type);
 void dispatcher(PCB_p, FIFO_q_p);
 int main(int, char const **);
-//
-
+unsigned int PRINT_FLAG = 0;
 unsigned int SYS_STACK = 0;
 
 
@@ -32,23 +31,50 @@ void isr(PCB_p running_process, FIFO_q_p ready_list) {
 
 
 void scheduler(PCB_p running_process, FIFO_q_p ready_list, enum interrupt_type type) {
-    if (type == timer) {
-        if (running_process) {
-            // put running process back in ready queue
-            pcb_set_state(running_process, ready);
-            fifo_q_enqueue(ready_list, running_process);
-        } // else - CPU is in idle state
+    
+    switch(type) {
 
-        dispatcher(running_process ,ready_list);
+    	case timer: //timer interrupt
+    		if (running_process) {
+            	// put running process back in ready queue
+            	pcb_set_state(running_process, ready);
+            	fifo_q_enqueue(ready_list, running_process);
+       		} // else - CPU is in idle state
+
+        	dispatcher(running_process ,ready_list);
+        	break;
+        
+        case none: //schedule a process 
+        	fifo_q_enqueue(ready_list, running_process);
+        	char * run_str = pcb_to_string(running_process);
+        	printf("PROCESS SCHEDULED\n%s\n",run_str);
+        	free(run_str);
+        	break;
     }
 }
 
 void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
-    // switch to next process
+	PCB_p temp = running_process;
+	PRINT_FLAG++;    
     running_process = fifo_q_dequeue(ready_list);   // mutates this pointer
+    
+    if(PRINT_FLAG == 4) {
+    	printf("FOURTH CALL\n");
+    	char ready_str[5000000];
+    	char * run_str = pcb_to_string(temp);
+    	char * switch_str = pcb_to_string(running_process);
+    	printf("%s\nSwitching to:\n%s\n", run_str, switch_str);
+    	free(run_str);
+    	free(switch_str);
+    	//printf("%s\n", fifo_q_to_string(ready_list, ready_str));
+    	PRINT_FLAG = 0;	
+    }
+    // switch to next process
     if (running_process) {
         SYS_STACK = pcb_get_pc(running_process);
     } // else - nothing to run, ready queue is empty
+
+
 }
 
 int main(int argc, char const *argv[]) {
@@ -59,18 +85,17 @@ int main(int argc, char const *argv[]) {
     unsigned int cpu_pc = 0;
     int max_num_process = 0; 
     PCB_p running_process;
-
     for(;;) {
 
     	int num_to_create = rand() % 6;
     	max_num_process += num_to_create;
-    	if(max_num_process > 30) break;
+    	if(max_num_process > 30) break;	
         // create some new processes and add them to the created queue
         create_processes(created_list, num_to_create);
 
         // add any new processes to the ready queue
         while(!fifo_q_is_empty(created_list)) {
-            fifo_q_enqueue(ready_list, fifo_q_dequeue(created_list));
+            scheduler(fifo_q_dequeue(created_list), ready_list, none);
         }
 
         running_process = fifo_q_dequeue(ready_list);
@@ -85,7 +110,7 @@ int main(int argc, char const *argv[]) {
         isr(running_process, ready_list);
         cpu_pc = SYS_STACK;
     }
-
+   
     // cpu_pc += rand_increment;
     // temp_pcb->context->pc = cpu_pc;
 }
