@@ -36,7 +36,7 @@ void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
     char s[5000] = "";
 
     if (running_process) {
-    	// if(!(PRINT_FLAG % 4)) {
+    	 if((PRINT_FLAG % 4) == 0) {
         	printf("FOURTH CALL\n------------------------------------------------\n");
         	
         	run_str = pcb_to_string(running_process);
@@ -44,7 +44,7 @@ void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
         	printf("%s\nSwitching to:\n%s\n", run_str, switch_str);
             free(run_str);
             free(switch_str);
-        // }
+        }
 
         pcb_set_state(running_process, ready);
         fifo_q_enqueue(ready_list, running_process);
@@ -60,7 +60,7 @@ void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
         pcb_set_state(running_process, running);
         SYS_STACK = pcb_get_pc(running_process);
 
-        // if (!(PRINT_FLAG % 4)) {
+        if ((PRINT_FLAG % 4) == 0) {
             PRINT_FLAG = 0;
             run_str = pcb_to_string(running_process);
             switch_str = pcb_to_string(fifo_q_peek(ready_list));
@@ -70,7 +70,7 @@ void dispatcher(PCB_p running_process, FIFO_q_p ready_list) {
             free(switch_str);
             fifo_q_to_string(ready_list, s);
             printf("%s\n", s);
-        // }
+         }
     } // else - nothing to run, ready queue is empty
     PRINT_FLAG++;
 
